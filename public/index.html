@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Socket.IO chat</title>
+    <style>
+      .chat-wrapper {
+        display: flex;
+        width: 100%;
+        height: 100%;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+      }
+      .user-item {
+        width: 100%;
+        border-bottom: 1px solid;
+        padding: 8px;
+      }
+      .chat-box {
+        margin-left: 24px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+      }
+      .message-history {
+        border: 1px solid;
+        min-height: 350px;
+        overflow-y: auto;
+      }
+
+      #message-form {
+        display: flex;
+        width: 100%;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-wrapper">
+      <div class="sidebar" id="sidebar">
+        <h2>Users</h2>
+      </div>
+      <div class="chat-box">
+        <div class="message-history" id="message-history"></div>
+        <form id="message-form">
+          <input type="text" id="message-input" />
+          <button type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+    <script type="module">
+      let activeUser = null;
+
+      function setActiveUserForChat(e) {
+        activeUser = e.target.value;
+        console.log(e.target.id);
+      }
+
+      import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+
+      const socket = io();
+
+      socket.emit("new user");
+
+      socket.on("new user connected", (users) => {
+        const sidebar = document.getElementById("sidebar");
+        users.forEach((user) => {
+          if (user.socketId !== socket.id) {
+            const element = document.createElement("div");
+            element.innerHTML = `${user.username}`;
+            element.className = `user-item`;
+            element.id = user.username;
+            element.addEventListener("click", setActiveUserForChat, false);
+            sidebar.appendChild(element);
+          }
+        });
+      });
+
+      socket.on("new message", (data) => {
+        const messageHistory = document.getElementById("message-history");
+
+        const element = document.createElement("div");
+        element.innerHTML = `${data.message}`;
+        element.className = `message-item`;
+        messageHistory.appendChild(element);
+
+        console.log(data);
+      });
+
+      const form = document.getElementById("message-form");
+      const input = document.getElementById("message-input");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value && input.value.length > 0) {
+          socket.emit("new message", input.value);
+          input.value = "";
+        }
+      });
+    </script>
+  </body>
+</html>
