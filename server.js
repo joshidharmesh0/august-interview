@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+
 const db = require("./models");
 const { getUsers } = require("./controller/user.controller");
 const { sendEmailNotification } = require("./controller/email.controller");
